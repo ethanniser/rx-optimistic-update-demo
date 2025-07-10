@@ -1,4 +1,12 @@
-import { HashMap, Layer, Option, Schedule, Stream } from "effect";
+import {
+  Effect,
+  HashMap,
+  Layer,
+  Option,
+  Random,
+  Schedule,
+  Stream,
+} from "effect";
 import { Rx, useRxValue } from "@effect-rx/rx-react";
 
 export type DomainState =
@@ -67,3 +75,13 @@ const makeStream = (domains: string[]) =>
       price: Math.random() * 100,
     }))
   ).pipe(Stream.schedule(Schedule.spaced("250 millis")));
+
+const mockMutation = Effect.fnUntraced(function* (domain: string) {
+  yield* Effect.sleep("250 millis");
+  if (yield* Random.nextBoolean) {
+    yield* Effect.fail("error");
+  }
+  return "updated";
+});
+
+export const mutationRx = Rx.fn(mockMutation);
