@@ -44,6 +44,28 @@ export const domainStateRx = Rx.family((domain: string) =>
   )
 );
 
+const refreshOnWindowFocus = <A>(self: Rx.Rx<A> & Rx.Refreshable): Rx.Rx<A> => {
+  return Rx.make((get) => {
+    function update() {
+      if (document.visibilityState === "visible") {
+        get.refresh(self);
+      }
+    }
+    window.addEventListener("visibilitychange", update);
+    get.addFinalizer(() => {
+      window.removeEventListener("visibilitychange", update);
+    });
+    return get(self);
+  });
+};
+
+export const dateNowRx = Rx.make(
+  Effect.gen(function* () {
+    yield* Effect.sleep("1 second");
+    return Date.now();
+  })
+).pipe(Rx.refreshable, refreshOnWindowFocus);
+
 export const initiateDomainAvailabilityRequestRx = Rx.family(
   (domains: string[]) =>
     rxRuntime.rx(

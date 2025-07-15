@@ -3,8 +3,9 @@ import {
   mutationRx,
   useDomainState,
   useInitiateDomainAvailabilityRequest,
+  dateNowRx,
 } from "./rx";
-import { useRx } from "@effect-rx/rx-react";
+import { useRx, useRxValue } from "@effect-rx/rx-react";
 
 const tlds = [".com", ".dev", ".io", ".org", ".xyz", ".app"];
 
@@ -12,10 +13,12 @@ export default function App() {
   const [query, setQuery] = useState("");
   const domains = useMemo(() => tlds.map((tld) => `${query}${tld}`), [query]);
   useInitiateDomainAvailabilityRequest(domains);
+  const dateNow = useRxValue(dateNowRx);
 
   const [mutationResult, mutate] = useRx(mutationRx);
   return (
     <div>
+      <pre>{JSON.stringify(dateNow, null, 2)}</pre>
       <input
         type="text"
         value={query}
