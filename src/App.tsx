@@ -1,10 +1,15 @@
 import { useRx, useRxValue } from "@effect-rx/rx-react";
-import { updateFailsRx, todosRx, addTodoRx, removeTodoRx } from "./rx";
+import {
+  updateFailsRx,
+  addTodoRx,
+  removeTodoRx,
+  optimisticTodosRx,
+} from "./rx";
 import { useState } from "react";
 
 export default function App() {
   const [updateFails, setUpdateFails] = useRx(updateFailsRx);
-  const todos = useRxValue(todosRx);
+  const todos = useRxValue(optimisticTodosRx);
   const [addTodoState, addTodo] = useRx(addTodoRx);
 
   const [input, setInput] = useState("");
@@ -19,6 +24,7 @@ export default function App() {
           Toggle update fails
         </button>
       </div>
+      <pre>{JSON.stringify(addTodoState, null, 2)}</pre>
 
       <div className="flex gap-2">
         <input
