@@ -1,46 +1,65 @@
-import { useMemo, useState } from "react";
-import {
-  mutationRx,
-  useDomainState,
-  useInitiateDomainAvailabilityRequest,
-  dateNowRx,
-} from "./rx";
 import { useRx, useRxValue } from "@effect-rx/rx-react";
-
-const tlds = [".com", ".dev", ".io", ".org", ".xyz", ".app"];
+import { updateFailsRx, todosRx, addTodoRx, removeTodoRx } from "./rx";
+import { useState } from "react";
 
 export default function App() {
-  const [query, setQuery] = useState("");
-  const domains = useMemo(() => tlds.map((tld) => `${query}${tld}`), [query]);
-  useInitiateDomainAvailabilityRequest(domains);
-  const dateNow = useRxValue(dateNowRx);
+  const [updateFails, setUpdateFails] = useRx(updateFailsRx);
+  const todos = useRxValue(todosRx);
+  const [addTodoState, addTodo] = useRx(addTodoRx);
 
-  const [mutationResult, mutate] = useRx(mutationRx);
+  const [input, setInput] = useState("");
   return (
-    <div>
-      <pre>{JSON.stringify(dateNow, null, 2)}</pre>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <button onClick={() => mutate("test.com")}>Mutate</button>
-      <pre>{JSON.stringify(mutationResult, null, 2)}</pre>
+    <div className="p-4 max-w-lg mx-auto space-y-4">
+      <div className="">
+        <p className="text-lg mb-2">Will fail: {updateFails.toString()}</p>
+        <button
+          onClick={() => setUpdateFails(!updateFails)}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+        >
+          Toggle update fails
+        </button>
+      </div>
 
-      {domains.map((domain) => (
-        <Domain key={domain} domain={domain} />
-      ))}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={() => addTodo(input)}
+          disabled={addTodoState.waiting}
+          className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+        >
+          {addTodoState.waiting ? "Adding..." : "Add"}
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {todos.map((todo) => (
+          <TodoItem key={todo} todo={todo} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function Domain({ domain }: { domain: string }) {
-  const state = useDomainState(domain);
-
+function TodoItem({ todo }: { todo: string }) {
+  const [removeTodoState, removeTodo] = useRx(removeTodoRx(todo));
   return (
-    <div>
-      <h1>{domain}</h1>
-      <pre>{JSON.stringify(state, null, 2)}</pre>
+    <div
+      key={todo}
+      className="flex items-center justify-between p-4 bg-gray-100 rounded"
+    >
+      <p className="text-gray-800">{todo}</p>
+      <button
+        onClick={() => removeTodo()}
+        disabled={removeTodoState.waiting}
+        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
+      >
+        {removeTodoState.waiting ? "Removing..." : "Remove"}
+      </button>
     </div>
   );
 }

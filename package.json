@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@effect-rx/rx-react": "^0.38.0",
+    "@effect/platform-browser": "^0.70.0",
+    "@tailwindcss/vite": "^4.1.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
