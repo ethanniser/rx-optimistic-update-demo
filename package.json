@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@effect-rx/rx": "0.47.1",
-    "@effect-rx/rx-react": "^0.40.5",
+    "@effect-rx/rx": "0.47.3",
+    "@effect-rx/rx-react": "^0.40.6",
     "@effect/platform-browser": "^0.70.0",
     "@tailwindcss/vite": "^4.1.11",
     "react": "^19.1.1",
