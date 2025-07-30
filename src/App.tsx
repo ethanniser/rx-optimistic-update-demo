@@ -1,22 +1,19 @@
-import { useRx, useRxRefresh, useRxSet, useRxValue } from "@effect-rx/rx-react";
+import { useRx, useRxRefresh, useRxValue } from "@effect-rx/rx-react";
 import {
   updateFailsRx,
-  addTodoRx,
+  addTodoRxString,
   removeTodoRx,
-  optimisticAddTodosRx,
-  optimisticRemoveTodosRx,
   todosRx,
-  optimisticTodosRx,
+  todosRxReadonly,
 } from "./rx";
 import { useState } from "react";
 
 export default function App() {
   const [updateFails, setUpdateFails] = useRx(updateFailsRx);
   const [input, setInput] = useState("");
-  const trueTodos = useRxValue(todosRx);
-  const optimisticTodos = useRxValue(optimisticTodosRx);
-  const addTodo = useRxSet(optimisticAddTodosRx);
-  const addTodoState = useRxValue(addTodoRx);
+  const trueTodos = useRxValue(todosRxReadonly);
+  const optimisticTodos = useRxValue(todosRx);
+  const [addTodoState, addTodo] = useRx(addTodoRxString);
 
   const manuallyRefresh = useRxRefresh(todosRx);
 
@@ -50,6 +47,7 @@ export default function App() {
         />
         <button
           type="button"
+          disabled={addTodoState.waiting}
           onClick={() => addTodo(input)}
           // disabled={addTodoState.waiting}
           className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
@@ -76,8 +74,7 @@ export default function App() {
 }
 
 function TodoItem({ todo }: { todo: { id: number; text: string } }) {
-  const removeTodo = useRxSet(optimisticRemoveTodosRx);
-  const removeTodoState = useRxValue(removeTodoRx);
+  const [removeTodoState, removeTodo] = useRx(removeTodoRx);
   return (
     <div
       key={todo.id}

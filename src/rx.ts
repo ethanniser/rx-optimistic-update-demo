@@ -1,43 +1,53 @@
-import { Effect } from "effect";
+import { Array, Effect } from "effect";
 import { Rx } from "@effect-rx/rx-react";
 
 export const updateFailsRx = Rx.make(false);
 
-let id = 0;
-let todos: {
-  id: number;
-  text: string;
-}[] = [];
-export const todosRx = Rx.make<{ id: number; text: string }[]>(() => {
-  console.log("todosRx", todos);
-  return todos;
-});
-export const optimisticTodosRx = Rx.optimistic(todosRx);
+interface Todo {
+  readonly id: number;
+  readonly text: string;
+}
 
-export const addTodoRx = Rx.fn(
-  Effect.fnUntraced(function* (todo: string, get: Rx.FnContext) {
+let id = 0;
+let todos = Array.empty<Todo>();
+
+export const todosRxReadonly = Rx.make(() => {
+  console.log("todosRx", todos);
+  return todos.slice();
+});
+
+export const todosRx = Rx.optimistic(todosRxReadonly);
+
+export const addTodoRx = Rx.optimisticFn(todosRx, {
+  reducer(current, update: Todo) {
+    console.log("optimisticAddTodosRx", update);
+    return [...current, update];
+  },
+  fn: Rx.fn(Effect.fnUntraced(function* (todo, get) {
     console.log("addTodoRx", todo);
     yield* Effect.sleep("1 second");
     if (get(updateFailsRx)) {
       yield* Effect.fail("Update failed");
     }
+    todos.push(todo);
+  }))
+})
 
-    todos.push({ id: id++, text: todo });
-  })
-);
+export const addTodoRxString = Rx.fn((text: string, get) => {
+  const todo: Todo = {
+    id: ++id,
+    text,
+  };
+  get.set(addTodoRx, todo);
+  return get.result(addTodoRx);
+})
 
-export const optimisticAddTodosRx = optimisticTodosRx.pipe(
-  Rx.optimisticFn({
-    updateToValue: (todo: string, current: { id: number; text: string }[]) => {
-      console.log("optimisticAddTodosRx", todo);
-      return [...current, { id: id++, text: todo }];
-    },
-    fn: addTodoRx,
-  })
-);
-
-export const removeTodoRx = Rx.fn(
-  Effect.fnUntraced(function* (id: number, get: Rx.FnContext) {
+export const removeTodoRx = Rx.optimisticFn(todosRx, {
+  reducer(current, id: number) {
+    console.log("optimisticRemoveTodosRx", id);
+    return current.filter((t) => t.id !== id);
+  },
+  fn: Rx.fn(Effect.fnUntraced(function* (id, get) {
     console.log("removeTodoRx", id);
     yield* Effect.sleep("1 second");
     if (get(updateFailsRx)) {
@@ -46,15 +56,5 @@ export const removeTodoRx = Rx.fn(
     console.log("before", todos);
     todos = todos.filter((t) => t.id !== id);
     console.log("after", todos);
-  })
-);
-
-export const optimisticRemoveTodosRx = optimisticTodosRx.pipe(
-  Rx.optimisticFn({
-    updateToValue: (id: number, current: { id: number; text: string }[]) => {
-      console.log("optimisticRemoveTodosRx", id);
-      return current.filter((t) => t.id !== id);
-    },
-    fn: removeTodoRx,
-  })
-);
+  }))
+})
