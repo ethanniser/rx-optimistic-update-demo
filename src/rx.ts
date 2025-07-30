@@ -13,7 +13,7 @@ let todos = Array.empty<Todo>();
 
 export const todosRxReadonly = Rx.make(() => {
   console.log("todosRx", todos);
-  return todos;
+  return todos.slice();
 });
 
 export const todosRx = Rx.optimistic(todosRxReadonly);
