@@ -88,7 +88,7 @@ function TodoItem({
   todo: { id: number; text: string };
   hideRemove?: boolean;
 }) {
-  const [removeTodoState, removeTodo] = useRx(removeTodoRx);
+  const [removeTodoState, removeTodo] = useRx(removeTodoRx(todo.id));
   return (
     <div
       key={todo.id}
@@ -100,7 +100,7 @@ function TodoItem({
       {!hideRemove && (
         <button
           type="button"
-          onClick={() => removeTodo(todo.id)}
+          onClick={() => removeTodo()}
           disabled={removeTodoState.waiting}
           className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
         >

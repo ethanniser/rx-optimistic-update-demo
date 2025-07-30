@@ -42,19 +42,22 @@ export const addTodoRxString = Rx.fn((text: string, get) => {
   return get.result(addTodoRx);
 })
 
-export const removeTodoRx = Rx.optimisticFn(todosRx, {
-  reducer(current, id: number) {
-    console.log("optimisticRemoveTodosRx", id);
-    return current.filter((t) => t.id !== id);
-  },
-  fn: Rx.fn(Effect.fnUntraced(function* (id, get) {
-    console.log("removeTodoRx", id);
-    yield* Effect.sleep("1 second");
-    if (get(updateFailsRx)) {
-      yield* Effect.fail("Update failed");
-    }
-    console.log("before", todos);
-    todos = todos.filter((t) => t.id !== id);
-    console.log("after", todos);
-  }))
-})
+export const removeTodoRx = Rx.family((id: number) =>
+  Rx.optimisticFn(todosRx, {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    reducer(current, _: void) {
+      console.log("optimisticRemoveTodosRx", id);
+      return current.filter((t) => t.id !== id);
+    },
+    fn: Rx.fn(Effect.fnUntraced(function* (_, get) {
+      console.log("removeTodoRx", id);
+      yield* Effect.sleep("1 second");
+      if (get(updateFailsRx)) {
+        yield* Effect.fail("Update failed");
+      }
+      console.log("before", todos);
+      todos = todos.filter((t) => t.id !== id);
+      console.log("after", todos);
+    }))
+  })
+)
