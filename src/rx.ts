@@ -8,8 +8,9 @@ interface Todo {
   readonly text: string;
 }
 
-let id = 0;
 let todos = Array.empty<Todo>();
+
+export const currentTodoIdRx = Rx.make(0);
 
 export const todosRxReadonly = Rx.make(() => {
   console.log("todosRx", todos);
@@ -23,24 +24,30 @@ export const addTodoRx = Rx.optimisticFn(todosRx, {
     console.log("optimisticAddTodosRx", update);
     return [...current, update];
   },
-  fn: Rx.fn(Effect.fnUntraced(function* (todo, get) {
-    console.log("addTodoRx", todo);
-    yield* Effect.sleep("1 second");
-    if (get(updateFailsRx)) {
-      yield* Effect.fail("Update failed");
-    }
-    todos.push(todo);
-  }))
-})
+  fn: Rx.fn(
+    Effect.fnUntraced(function* (todo, get) {
+      console.log("addTodoRx", todo);
+      yield* Effect.sleep("1 second");
+      if (get(updateFailsRx)) {
+        yield* Effect.fail("Update failed");
+      }
+      todos.push(todo);
+    })
+  ),
+});
 
-export const addTodoRxString = Rx.fn((text: string, get) => {
-  const todo: Todo = {
-    id: ++id,
-    text,
-  };
-  get.set(addTodoRx, todo);
-  return get.result(addTodoRx);
-})
+export const addTodoRxString = Rx.family(
+  ({ text, id }: { text: string; id: number }) =>
+    Rx.fn((_, get) => {
+      const todo: Todo = {
+        id,
+        text,
+      };
+      get.set(currentTodoIdRx, id + 1);
+      get.set(addTodoRx, todo);
+      return get.result(addTodoRx);
+    })
+);
 
 export const removeTodoRx = Rx.family((id: number) =>
   Rx.optimisticFn(todosRx, {
@@ -49,15 +56,17 @@ export const removeTodoRx = Rx.family((id: number) =>
       console.log("optimisticRemoveTodosRx", id);
       return current.filter((t) => t.id !== id);
     },
-    fn: Rx.fn(Effect.fnUntraced(function* (_, get) {
-      console.log("removeTodoRx", id);
-      yield* Effect.sleep("1 second");
-      if (get(updateFailsRx)) {
-        yield* Effect.fail("Update failed");
-      }
-      console.log("before", todos);
-      todos = todos.filter((t) => t.id !== id);
-      console.log("after", todos);
-    }))
+    fn: Rx.fn(
+      Effect.fnUntraced(function* (_, get) {
+        console.log("removeTodoRx", id);
+        yield* Effect.sleep("1 second");
+        if (get(updateFailsRx)) {
+          yield* Effect.fail("Update failed");
+        }
+        console.log("before", todos);
+        todos = todos.filter((t) => t.id !== id);
+        console.log("after", todos);
+      })
+    ),
   })
-)
+);

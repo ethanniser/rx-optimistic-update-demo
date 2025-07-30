@@ -5,6 +5,7 @@ import {
   removeTodoRx,
   todosRx,
   todosRxReadonly,
+  currentTodoIdRx,
 } from "./rx";
 import { useState } from "react";
 
@@ -13,7 +14,10 @@ export default function App() {
   const [input, setInput] = useState("");
   const trueTodos = useRxValue(todosRxReadonly);
   const optimisticTodos = useRxValue(todosRx);
-  const [addTodoState, addTodo] = useRx(addTodoRxString);
+  const currentTodoId = useRxValue(currentTodoIdRx);
+  const [addTodoState, addTodo] = useRx(
+    addTodoRxString({ text: input, id: currentTodoId })
+  );
 
   const manuallyRefresh = useRxRefresh(todosRx);
 
@@ -49,7 +53,7 @@ export default function App() {
           <button
             type="button"
             disabled={addTodoState.waiting}
-            onClick={() => addTodo(input)}
+            onClick={() => addTodo()}
             // disabled={addTodoState.waiting}
             className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
           >
