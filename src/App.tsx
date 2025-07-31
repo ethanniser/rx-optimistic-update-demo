@@ -1,11 +1,10 @@
 import { useRx, useRxRefresh, useRxValue } from "@effect-rx/rx-react";
 import {
   updateFailsRx,
-  addTodoRx,
   removeTodoRx,
   todosRx,
   todosRxReadonly,
-  currentTodoIdRx,
+  addTodoString,
 } from "./rx";
 import { useState } from "react";
 
@@ -14,10 +13,7 @@ export default function App() {
   const [input, setInput] = useState("");
   const trueTodos = useRxValue(todosRxReadonly);
   const optimisticTodos = useRxValue(todosRx);
-  const currentTodoId = useRxValue(currentTodoIdRx);
-  const [addTodoState, addTodo] = useRx(
-    addTodoRx({ text: input, id: currentTodoId })
-  );
+  const [addTodoState, addTodo] = useRx(addTodoString);
 
   const manuallyRefresh = useRxRefresh(todosRx);
 
@@ -52,8 +48,7 @@ export default function App() {
           />
           <button
             type="button"
-            disabled={addTodoState.waiting}
-            onClick={() => addTodo()}
+            onClick={() => addTodo(input)}
             // disabled={addTodoState.waiting}
             className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
           >
