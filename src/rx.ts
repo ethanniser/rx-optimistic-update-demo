@@ -19,34 +19,24 @@ export const todosRxReadonly = Rx.make(() => {
 
 export const todosRx = Rx.optimistic(todosRxReadonly);
 
-export const addTodoRx = Rx.optimisticFn(todosRx, {
-  reducer(current, update: Todo) {
-    console.log("optimisticAddTodosRx", update);
-    return [...current, update];
-  },
-  fn: Rx.fn(
-    Effect.fnUntraced(function* (todo, get) {
-      console.log("addTodoRx", todo);
-      yield* Effect.sleep("1 second");
-      if (get(updateFailsRx)) {
-        yield* Effect.fail("Update failed");
-      }
-      todos.push(todo);
-    })
-  ),
-});
-
-export const addTodoRxString = Rx.family(
-  ({ text, id }: { text: string; id: number }) =>
-    Rx.fn((_, get) => {
-      const todo: Todo = {
-        id,
-        text,
-      };
-      get.set(currentTodoIdRx, id + 1);
-      get.set(addTodoRx, todo);
-      return get.result(addTodoRx);
-    })
+export const addTodoRx = Rx.family((todo: Todo) =>
+  Rx.optimisticFn(todosRx, {
+    reducer(current, _: void) {
+      console.log("optimisticAddTodosRx", todo);
+      return [...current, todo];
+    },
+    fn: Rx.fn(
+      Effect.fnUntraced(function* (_: void, get) {
+        console.log("addTodoRx", todo);
+        get.set(currentTodoIdRx, todo.id + 1);
+        yield* Effect.sleep("1 second");
+        if (get(updateFailsRx)) {
+          yield* Effect.fail("Update failed");
+        }
+        todos.push(todo);
+      })
+    ),
+  })
 );
 
 export const removeTodoRx = Rx.family((id: number) =>

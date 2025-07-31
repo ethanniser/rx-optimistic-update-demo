@@ -1,7 +1,7 @@
 import { useRx, useRxRefresh, useRxValue } from "@effect-rx/rx-react";
 import {
   updateFailsRx,
-  addTodoRxString,
+  addTodoRx,
   removeTodoRx,
   todosRx,
   todosRxReadonly,
@@ -16,7 +16,7 @@ export default function App() {
   const optimisticTodos = useRxValue(todosRx);
   const currentTodoId = useRxValue(currentTodoIdRx);
   const [addTodoState, addTodo] = useRx(
-    addTodoRxString({ text: input, id: currentTodoId })
+    addTodoRx({ text: input, id: currentTodoId })
   );
 
   const manuallyRefresh = useRxRefresh(todosRx);
