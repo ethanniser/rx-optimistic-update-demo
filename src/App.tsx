@@ -1,4 +1,4 @@
-import { useRx, useRxRefresh, useRxSetPromise, useRxValue } from "@effect-rx/rx-react";
+import { useRx, useRxRefresh, useRxValue } from "@effect-rx/rx-react";
 import {
   updateFailsRx,
   removeTodoRx,
@@ -37,6 +37,7 @@ export default function App() {
         >
           Manually refresh
         </button>
+        <pre>{JSON.stringify(addTodoState, null, 2)}</pre>
 
         <div className="flex gap-2">
           <input
@@ -51,7 +52,7 @@ export default function App() {
             // disabled={addTodoState.waiting}
             className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
           >
-          {addTodoState.waiting ? "Adding..." : "Add"}
+            {addTodoState.waiting ? "Adding..." : "Add"}
           </button>
         </div>
       </div>
