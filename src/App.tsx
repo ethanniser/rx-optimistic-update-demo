@@ -62,7 +62,7 @@ export default function App() {
           <h1 className="text-xl font-bold mb-4">Optimistic Todos</h1>
           <div className="space-y-4">
             {optimisticTodos.map((todo) => (
-              <TodoItem key={todo.id} todo={todo} hideRemove={true} />
+              <TodoItem key={todo.id} todo={todo} disableRemove={false} />
             ))}
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function App() {
           <h1 className="text-xl font-bold mb-4">True Todos</h1>
           <div className="space-y-4">
             {trueTodos.map((todo) => (
-              <TodoItem key={todo.id} todo={todo} />
+              <TodoItem key={todo.id} todo={todo} disableRemove={true} />
             ))}
           </div>
         </div>
@@ -82,10 +82,10 @@ export default function App() {
 
 function TodoItem({
   todo,
-  hideRemove,
+  disableRemove,
 }: {
   todo: { id: number; text: string };
-  hideRemove?: boolean;
+  disableRemove?: boolean;
 }) {
   const [removeTodoState, removeTodo] = useRx(removeTodoRx(todo.id));
   return (
@@ -96,16 +96,14 @@ function TodoItem({
       <p className="text-gray-800">
         {todo.id}: {todo.text}
       </p>
-      {!hideRemove && (
-        <button
-          type="button"
-          onClick={() => removeTodo()}
-          disabled={removeTodoState.waiting}
-          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
-        >
-          {removeTodoState.waiting ? "Removing..." : "Remove"}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => removeTodo()}
+        disabled={removeTodoState.waiting || disableRemove}
+        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
+      >
+        {removeTodoState.waiting ? "Removing..." : "Remove"}
+      </button>
     </div>
   );
 }
