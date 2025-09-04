@@ -11,8 +11,8 @@ interface Todo {
 class TodosRepo extends Effect.Service<TodosRepo>()("TodosRepo", {
   accessors: true,
   scoped: Effect.gen(function* () {
-    const scope = yield* Effect.scope
-    let currentId = 0
+    const scope = yield* Effect.scope;
+    let currentId = 0;
     let todos = Array.empty<Todo>();
 
     const nextId = Effect.sync(() => ++currentId);
@@ -23,20 +23,20 @@ class TodosRepo extends Effect.Service<TodosRepo>()("TodosRepo", {
       if (shouldFail) {
         return yield* Effect.fail(new Error("Update failed"));
       }
-    })
+    });
 
-    const add = Effect.fn(function*(todo: Todo) {
+    const add = Effect.fn(function* (todo: Todo) {
       console.log("TodosRepo.add", todo);
       yield* simulateNetwork;
       todos = Array.append(todos, todo);
-    })
-    const addFork = flow(add, Effect.forkIn(scope))
+    });
+    const addFork = flow(add, Effect.forkIn(scope));
 
-    const remove = Effect.fn(function*(id: number) {
+    const remove = Effect.fn(function* (id: number) {
       console.log("TodosRepo.remove", id);
       yield* simulateNetwork;
       todos = Array.filter(todos, (t) => t.id !== id);
-    })
+    });
 
     return {
       nextId,
@@ -44,18 +44,18 @@ class TodosRepo extends Effect.Service<TodosRepo>()("TodosRepo", {
       addFork,
       remove,
       all: Effect.sync(() => {
-        console.log("TodosRepo.all")
+        console.log("TodosRepo.all");
         return todos;
-      })
+      }),
     };
-  })
+  }),
 }) {
-  static runtime = Rx.runtime(TodosRepo.Default)
+  static runtime = Rx.runtime(TodosRepo.Default);
 }
 
-export const todosRxReadonly = TodosRepo.runtime.rx(TodosRepo.all).pipe(
-  Rx.map(Result.getOrElse(Array.empty<Todo>)),
-)
+export const todosRxReadonly = TodosRepo.runtime
+  .rx(TodosRepo.all)
+  .pipe(Rx.map(Result.getOrElse(Array.empty<Todo>)));
 
 export const todosRx = Rx.optimistic(todosRxReadonly);
 
@@ -68,17 +68,19 @@ const addTodoRx = Rx.optimisticFn(todosRx, {
     Effect.fnUntraced(function* (todo) {
       console.log("addTodoRx", todo);
       // To support concurrency, we fork the add operation
-      const fiber = yield* TodosRepo.addFork(todo)
-      return yield* Fiber.join(fiber)
+      const fiber = yield* TodosRepo.addFork(todo);
+      return yield* Fiber.join(fiber);
     })
   ),
-})
+});
 
-export const addTodoString = TodosRepo.runtime.fn(Effect.fnUntraced(function*(text: string, get: Rx.FnContext) {
-  const id = yield* TodosRepo.nextId
-  get.set(addTodoRx, { id, text });
-  return yield* get.result(addTodoRx)
-}))
+export const addTodoString = TodosRepo.runtime.fn(
+  Effect.fnUntraced(function* (text: string, get: Rx.FnContext) {
+    const id = yield* TodosRepo.nextId;
+    get.set(addTodoRx, { id, text });
+    return yield* get.result(addTodoRx);
+  })
+);
 
 export const removeTodoRx = Rx.family((id: number) =>
   Rx.optimisticFn(todosRx, {
@@ -91,7 +93,7 @@ export const removeTodoRx = Rx.family((id: number) =>
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Effect.fnUntraced(function* (_) {
         console.log("removeTodoRx", id);
-        yield* TodosRepo.remove(id)
+        yield* TodosRepo.remove(id);
       })
     ),
   })

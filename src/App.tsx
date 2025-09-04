@@ -1,4 +1,4 @@
-import { useRx, useRxRefresh, useRxValue } from "@effect-rx/rx-react";
+import { useRx, useRxRefresh, useRxSet, useRxValue } from "@effect-rx/rx-react";
 import {
   updateFailsRx,
   removeTodoRx,
@@ -13,7 +13,7 @@ export default function App() {
   const [input, setInput] = useState("");
   const trueTodos = useRxValue(todosRxReadonly);
   const optimisticTodos = useRxValue(todosRx);
-  const [addTodoState, addTodo] = useRx(addTodoString);
+  const addTodo = useRxSet(addTodoString);
 
   const manuallyRefresh = useRxRefresh(todosRx);
 
@@ -37,7 +37,6 @@ export default function App() {
         >
           Manually refresh
         </button>
-        <pre>{JSON.stringify(addTodoState, null, 2)}</pre>
 
         <div className="flex gap-2">
           <input
@@ -49,10 +48,9 @@ export default function App() {
           <button
             type="button"
             onClick={() => addTodo(input)}
-            // disabled={addTodoState.waiting}
             className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
           >
-            {addTodoState.waiting ? "Adding..." : "Add"}
+            Add
           </button>
         </div>
       </div>
@@ -62,7 +60,7 @@ export default function App() {
           <h1 className="text-xl font-bold mb-4">Optimistic Todos</h1>
           <div className="space-y-4">
             {optimisticTodos.map((todo) => (
-              <TodoItem key={todo.id} todo={todo} disableRemove={false} />
+              <TodoItem key={todo.id} todo={todo} hideRemove={false} />
             ))}
           </div>
         </div>
@@ -71,7 +69,7 @@ export default function App() {
           <h1 className="text-xl font-bold mb-4">True Todos</h1>
           <div className="space-y-4">
             {trueTodos.map((todo) => (
-              <TodoItem key={todo.id} todo={todo} disableRemove={true} />
+              <TodoItem key={todo.id} todo={todo} hideRemove={true} />
             ))}
           </div>
         </div>
@@ -82,10 +80,10 @@ export default function App() {
 
 function TodoItem({
   todo,
-  disableRemove,
+  hideRemove,
 }: {
   todo: { id: number; text: string };
-  disableRemove?: boolean;
+  hideRemove?: boolean;
 }) {
   const [removeTodoState, removeTodo] = useRx(removeTodoRx(todo.id));
   return (
@@ -96,14 +94,16 @@ function TodoItem({
       <p className="text-gray-800">
         {todo.id}: {todo.text}
       </p>
-      <button
-        type="button"
-        onClick={() => removeTodo()}
-        disabled={removeTodoState.waiting || disableRemove}
-        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
-      >
-        {removeTodoState.waiting ? "Removing..." : "Remove"}
-      </button>
+      {!hideRemove && (
+        <button
+          type="button"
+          onClick={() => removeTodo()}
+          disabled={removeTodoState.waiting}
+          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded disabled:opacity-50"
+        >
+          {removeTodoState.waiting ? "Removing..." : "Remove"}
+        </button>
+      )}
     </div>
   );
 }
